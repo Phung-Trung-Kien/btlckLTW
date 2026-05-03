@@ -92,6 +92,7 @@ reportgenerator "-reports:<path>/coverage.cobertura.xml" "-targetdir:backend/pro
 | 48 | SERV_RUS_02 | RequestUpdateService.cs | Chặn request update khi target type không hợp lệ. | `TargetType = "invalid"`, `TargetId` là GUID hợp lệ. | Ném `ArgumentException("Invalid TargetType. Only 'course', 'coursecontent', 'lesson' is allowed.")`; không tạo request. | PASS |
 | 49 | SERV_RUS_03 | RequestUpdateService.cs | Chặn request update khi TargetId không phải GUID hợp lệ. | `TargetId = "not-a-valid-guid"` (chuỗi tùy ý). | Ném `ArgumentException("Invalid TargetId or RequestById. It must be a valid GUID.")`; không tạo request. | PASS |
 | 50 | SERV_RUS_04 | RequestUpdateService.cs | Tạo request update khi target là coursecontent thuộc đúng teacher. | `userId` (GUID hợp lệ), `TargetType = "coursecontent"`, `TargetId` là content của course thuộc teacher. | `UpdateRequestCourse` được lưu với `TargetType = "coursecontent"` và `RequestById` đúng. | PASS |
+
 | 51 | SERV_RUS_05 | RequestUpdateService.cs | Tạo request update khi target là lesson thuộc đúng teacher. | `TargetType = "lesson"`, `TargetId` là lesson trong course thuộc teacher. | `UpdateRequestCourse` được lưu với `TargetType = "lesson"` và đúng `TargetId`. | PASS |
 | 52 | SERV_RUS_06 | RequestUpdateService.cs | Chặn request update khi teacher không tồn tại trong hệ thống. | `userId` hợp lệ (GUID) nhưng `IsTeacherExistsAsync = false`. | Ném `ArgumentException("Teacher with the given RequestById does not exist.")`; không gọi create. | PASS |
 | 53 | SERV_ECS_11 | EnrollmentCourseService.cs | IsEnrolledInCourseAsync trả về true khi student đã enroll. | `studentId`, `courseId` hợp lệ; repository trả về `true`. | Kết quả `true`; repository được gọi đúng một lần. | PASS |
@@ -119,6 +120,30 @@ reportgenerator "-reports:<path>/coverage.cobertura.xml" "-targetdir:backend/pro
 | 75 | SERV_COS_18 | CourseService.cs | SearchItemsAsync báo lỗi khi repository ném exception. | Repository `SearchItemsAsync` ném `Exception("DB connection lost")`. | Ném `Exception("Error when retriev course: *")`. | PASS |
 | 76 | SERV_COS_19 | CourseService.cs | GetCoursesByTeacherIdAsync báo lỗi khi teacher không tồn tại. | `IsTeacherExistsAsync = false`. | Ném `Exception("Error when retriev course: *")`. | PASS |
 | 77 | SERV_COS_20 | CourseService.cs | GetEnrolledCoursesByStudentIdAsync báo lỗi khi student không tồn tại. | `IsStudentExistAsync = false`. | Ném `Exception("Error when retriev enrolled courses: *")`. | PASS |
+| 78 | SERV_CCS_09 | CourseContentService.cs | Chặn thêm content khi userId rỗng (không có token). | `userId = ""` (chuỗi rỗng), course `draft`. | Ném `UnauthorizedAccessException("User not found in token")`. | PASS |
+| 79 | SERV_CCS_10 | CourseContentService.cs | Chặn thêm content khi giáo viên không sở hữu course. | `userId` khác `Teacher.User.Id` của course. | Ném `UnauthorizedAccessException("You are not the teacher of this course")`. | PASS |
+| 80 | SERV_CCS_11 | CourseContentService.cs | Chặn cập nhật content khi content không tồn tại. | `CourseContentExistsByContentIdAsync = false`. | Ném `KeyNotFoundException("Course content not found")`. | PASS |
+| 81 | SERV_CCS_12 | CourseContentService.cs | Chặn cập nhật content khi course không ở trạng thái draft. | Course `Status = "published"`. | Ném `InvalidOperationException("Cannot update course content unless the course is in draft status")`. | PASS |
+| 82 | SERV_CCS_13 | CourseContentService.cs | Chặn cập nhật content khi userId rỗng. | `userId = ""` (chuỗi rỗng), course `draft`. | Ném `UnauthorizedAccessException("User not found in token")`. | PASS |
+| 83 | SERV_CCS_14 | CourseContentService.cs | Chặn cập nhật content khi giáo viên không sở hữu course. | `userId` khác `Teacher.User.Id` của course. | Ném `UnauthorizedAccessException("You are not the teacher of this course")`. | PASS |
+| 84 | SERV_CRS_06 | CourseReviewService.cs | CheckReviewedCourseAsync trả về true khi student đã review. | Repository `CheckReviewedCourseAsync` trả về `true`. | Kết quả `true`. | PASS |
+| 85 | SERV_CRS_07 | CourseReviewService.cs | Chặn thêm review khi student không tồn tại. | `IsStudentExistAsync = false`. | Ném `Exception("Student with id ... not found")`. | PASS |
+| 86 | SERV_CRS_08 | CourseReviewService.cs | Chặn cập nhật review khi review không tồn tại. | `CourseReviewExistsAsync = false`. | Ném `Exception("Review with id ... not found")`. | PASS |
+| 87 | SERV_CRS_09 | CourseReviewService.cs | Chặn lấy review theo course khi course không tồn tại. | `CourseExistsAsync = false`. | Ném `Exception("Course with id ... not found")`. | PASS |
+| 88 | SERV_CRS_10 | CourseReviewService.cs | Chặn lấy review theo student khi student không tồn tại. | `IsStudentExistAsync = false`. | Ném `Exception("Student with id ... not found")`. | PASS |
+| 89 | SERV_ECS_22 | EnrollmentCourseService.cs | GetEnrollmentInCourseAsync trả về danh sách khi teacher và admin hợp lệ. | `teacherId` là teacher và admin; repository trả về 1 enrollment. | Kết quả có 1 phần tử; `Progress = 50`. | PASS |
+| 90 | SERV_ECS_23 | EnrollmentCourseService.cs | Chặn tạo enrollment khi course không tồn tại. | `CourseExistsAsync = false`. | Ném `KeyNotFoundException("Course with id: ... not found")`. | PASS |
+| 91 | SERV_ECS_24 | EnrollmentCourseService.cs | Chặn lấy chi tiết enrollment khi course không tồn tại. | `CourseExistsAsync = false`. | Ném `KeyNotFoundException("Course with id: ... not found")`. | PASS |
+| 92 | SERV_ECS_25 | EnrollmentCourseService.cs | Chặn lấy chi tiết enrollment khi user không tồn tại. | `IsUserExistAsync = false`. | Ném `UnauthorizedAccessException("User not found")`. | PASS |
+| 93 | SERV_ECS_26 | EnrollmentCourseService.cs | Chặn lấy chi tiết enrollment khi courseId không khớp. | `enrollment.CourseId != courseId`. | Ném `KeyNotFoundException("Enrollment with id: ... not found in course with id: ...")`. | PASS |
+| 94 | SERV_ECS_27 | EnrollmentCourseService.cs | Chặn lấy chi tiết enrollment khi user không sở hữu enrollment. | `enrollment.Student.User.Id != userId`. | Ném `UnauthorizedAccessException("You are not authorized to view this enrollment")`. | PASS |
+| 95 | SERV_COS_21 | CourseService.cs | Chặn cập nhật full course khi teacher không sở hữu course. | `course.TeacherId != teacherId`. | Ném `UnauthorizedAccessException("You are not the teacher of this course")`. | PASS |
+| 96 | SERV_COS_22 | CourseService.cs | Chặn yêu cầu publish khi teacher không sở hữu course draft. | `course.TeacherId != teacherId`; course `draft`. | Ném `UnauthorizedAccessException("You are not the teacher of this course")`. | PASS |
+| 97 | SERV_COS_23 | CourseService.cs | Chặn lấy dữ liệu chỉnh sửa khi teacher không khớp course. | `course.TeacherId != teacherId` dù teacher tồn tại. | Ném `UnauthorizedAccessException("You are not the teacher of this course")`. | PASS |
+| 98 | SERV_COS_24 | CourseService.cs | Chặn tạo full course khi category không tồn tại. | `GetCategoryByIdAsync` trả về `null`. | Ném `KeyNotFoundException("Category with id ... not found.")`. | PASS |
+| 99 | SERV_RUS_07 | RequestUpdateService.cs | Chặn request update khi teacher không sở hữu course target. | Course tồn tại nhưng `Teacher.User.Id != userId`. | Ném `ArgumentException("You are not the teacher of this course.")`; không gọi create. | PASS |
+| 100 | SERV_RUS_08 | RequestUpdateService.cs | Chặn request update khi teacher không sở hữu coursecontent target. | Content tồn tại nhưng `Course.Teacher.User.Id != userId`. | Ném `ArgumentException("You are not the teacher of this course content.")`; không gọi create. | PASS |
+| 101 | SERV_RUS_09 | RequestUpdateService.cs | Chặn request update khi teacher không sở hữu lesson target. | Lesson tồn tại nhưng `CourseContent.Course.Teacher.User.Id != userId`. | Ném `ArgumentException("You are not the teacher of this lesson.")`; không gọi create. | PASS |
 
 ---
 
@@ -126,14 +151,14 @@ reportgenerator "-reports:<path>/coverage.cobertura.xml" "-targetdir:backend/pro
 
 | Chỉ số | Giá trị |
 |---|---|
-| **Tổng số test** | **77** |
-| **Passed** | **77** |
+| **Tổng số test** | **101** |
+| **Passed** | **101** |
 | **Failed** | 0 |
 | **Skipped** | 0 |
 | **Thời gian chạy** | ~1 giây |
 
 ```text
-Passed!  - Failed: 0, Passed: 77, Skipped: 0, Total: 77, Duration: 1 s
+Passed!  - Failed: 0, Passed: 101, Skipped: 0, Total: 101, Duration: 1 s
 ```
 
 ---
@@ -142,6 +167,37 @@ Passed!  - Failed: 0, Passed: 77, Skipped: 0, Total: 77, Duration: 1 s
 
 | Class | Line Coverage | Method Coverage |
 |---|---|---|
+| `CategoryService` | **100%** | **100%** |
+| `CourseContentService` | **100%** | **100%** |
+| `CourseReviewService` | **100%** | **100%** |
+| `RequestUpdateService` | **100%** | **100%** |
+| `CourseService` | **96.4%** | **100%** |
+| `LessonService` | **96.3%** | **100%** |
+| `EnrollmentCourseService` | **95.3%** | **100%** |
+| **Tổng (7 classes)** | **97% line coverage** | **100% method coverage** |
+
+> **Lưu ý:** 3% còn lại là các `null-coalescing` branches trong LINQ projection (ví dụ: `en.Student?.User?.FullName ?? "Unknown"`) và EF Core transaction catch-blocks — đây là giới hạn lý thuyết của unit test với mock, cần integration test để phủ thêm.
+
+---
+
+## Ghi chú kỹ thuật
+
+### Chiến lược Mock vs InMemory DB
+
+| Loại test | Kỹ thuật | Áp dụng cho |
+|---|---|---|
+| Mock repositories (Moq) | `Mock<IXxxRepository>` + `.Setup(...).ReturnsAsync(...)` | Tất cả test case logic thuần (không thay đổi DB) |
+| InMemory DB (EF Core) | `CourseTestHelpers.CreateInMemoryDbContext(...)` + real repositories | Test case `SERV_COS_10` và `SERV_COS_17` (CheckDB/Rollback) |
+
+### CheckDB & Rollback (SERV_COS_10, SERV_COS_17)
+
+- **CheckDB:** Sau khi gọi service, truy vấn trực tiếp `dbContext` để xác minh dữ liệu đã được lưu đúng.
+- **Rollback:** Khối `finally` xóa toàn bộ entity đã tạo và `SaveChangesAsync()`, đảm bảo DB trở về rỗng sau test.
+
+### Cấu trúc test theo pattern AAA
+
+Tất cả test tuân thủ **Arrange → Act → Assert** với comment rõ ràng và `// [ID: SERV_XXX_NN]` ở đầu mỗi test method.
+
 | `CategoryService` | **100%** | **100%** |
 | `CourseService` | **95.4%** | **100%** |
 | `LessonService` | **96.3%** | **100%** |
